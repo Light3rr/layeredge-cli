@@ -69,29 +69,21 @@ check_dependencies() {
     if ! command_exists rustc; then
         echo "Installing Rust..."
         curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-        source $HOME/.cargo/env
+        source "$HOME/.cargo/env"
     fi
 
     # Check Risc0 Toolchain
     if ! command_exists rzup; then
         echo "Installing Risc0 Toolchain..."
         curl -L https://risczero.com/install | bash
-
-        # Ensure rzup is in PATH
-        export PATH="$HOME/.risc0/bin:$PATH"
-        echo 'export PATH=$HOME/.risc0/bin:$PATH' >> ~/.bashrc
-        source ~/.bashrc
+        echo 'export PATH="$HOME/.risc0/bin:$PATH"' >> ~/.bashrc
+        source "$HOME/.bashrc"
 
         # Verify installation
-        if command_exists rzup; then
-            echo "Installing Risc0 dependencies..."
-            rzup install
-        else
-            echo -e "${RED}Risc0 installation failed. Please restart your shell or manually add ~/.risc0/bin to your PATH.${NC}"
-            exit 1
-        fi
+        command -v rzup || { echo "rzup not found, exiting"; exit 1; }
     fi
 }
+
 
 
 # Clone repository and navigate
