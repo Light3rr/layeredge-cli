@@ -53,7 +53,6 @@ command_exists() {
     command -v "$1" >/dev/null 2>&1
 }
 
-# Check and install dependencies
 check_dependencies() {
     echo "Checking dependencies..."
 
@@ -64,12 +63,6 @@ check_dependencies() {
         sudo tar -C /usr/local -xzf go1.21.8.linux-amd64.tar.gz
         echo 'export PATH=$PATH:/usr/local/go/bin' >> ~/.bashrc
         source ~/.bashrc
-    else
-        go_version=$(go version | cut -d" " -f3)
-        if [[ "$go_version" < "go1.18" ]]; then
-            echo -e "${RED}Go version 1.18 or higher is required${NC}"
-            exit 1
-        fi
     fi
 
     # Check Rust
@@ -77,21 +70,29 @@ check_dependencies() {
         echo "Installing Rust..."
         curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
         source $HOME/.cargo/env
-    else
-        rust_version=$(rustc --version | cut -d" " -f2)
-        if [[ "$rust_version" < "1.81.0" ]]; then
-            echo "Updating Rust..."
-            rustup update
-        fi
     fi
 
-    # Check Risc0
+    # Check Risc0 Toolchain
     if ! command_exists rzup; then
         echo "Installing Risc0 Toolchain..."
         curl -L https://risczero.com/install | bash
-        rzup install
+
+        # Ensure rzup is in PATH
+        export PATH="$HOME/.risc0/bin:$PATH"
+        echo 'export PATH=$HOME/.risc0/bin:$PATH' >> ~/.bashrc
+        source ~/.bashrc
+
+        # Verify installation
+        if command_exists rzup; then
+            echo "Installing Risc0 dependencies..."
+            rzup install
+        else
+            echo -e "${RED}Risc0 installation failed. Please restart your shell or manually add ~/.risc0/bin to your PATH.${NC}"
+            exit 1
+        fi
     fi
 }
+
 
 # Clone repository and navigate
 setup_repository() {
