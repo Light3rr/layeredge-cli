@@ -3,6 +3,7 @@
 # LayerEdge CLI Light Node Automatic Installation Script
 
 set -e
+clear 
 
 # Colors for output
 GREEN='\033[0;32m'
