@@ -3,13 +3,47 @@
 # LayerEdge CLI Light Node Automatic Installation Script
 
 set -e
-clear
-curl -sL https://raw.githubusercontent.com/zidanaetrna/unichain/refs/heads/main/button_logo_script.sh | bash
 
 # Colors for output
 GREEN='\033[0;32m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
+
+# Run the button logo script (optional branding)
+curl -sL https://raw.githubusercontent.com/zidanaetrna/unichain/refs/heads/main/button_logo_script.sh | bash
+
+# Cleanup function to remove existing installations
+cleanup() {
+    echo -e "${GREEN}Cleaning up previous installations...${NC}"
+    # Remove previous light-node directory if it exists
+    if [ -d "light-node" ]; then
+        rm -rf light-node
+    fi
+    # Kill any running processes related to light-node or merkle service
+    pkill -f './light-node' 2>/dev/null || true
+    pkill -f 'cargo run' 2>/dev/null || true
+    # Remove temporary Go files
+    rm -f go1.21.8.linux-amd64.tar.gz 2>/dev/null
+    echo "Cleanup complete."
+}
+
+# Function to configure firewall (ufw)
+configure_firewall() {
+    echo -e "${GREEN}Configuring firewall (ufw) to allow required ports...${NC}"
+    # Check if ufw is installed
+    if ! command -v ufw >/dev/null 2>&1; then
+        echo "Installing ufw..."
+        sudo apt-get update
+        sudo apt-get install -y ufw
+    fi
+    # Enable ufw if not already enabled
+    sudo ufw status | grep -q "Status: active" || sudo ufw enable
+    # Allow required ports
+    sudo ufw allow 3001/tcp  # ZK Prover (Merkle service)
+    sudo ufw allow 8080/tcp  # Points API
+    sudo ufw allow 9090/tcp  # gRPC endpoint
+    echo "Firewall configured. Allowed ports: 3001, 8080, 9090."
+}
 
 echo -e "${GREEN}Starting LayerEdge CLI Light Node installation...${NC}"
 
@@ -68,7 +102,7 @@ setup_repository() {
 # Get user private key and configure environment
 configure_environment() {
     echo -e "\n${GREEN}Please enter your private key for the CLI node:${NC}"
-    read private_key  # Removed -s flag to make input visible
+    read private_key  # Input visible as requested
     echo
 
     # Create .env file with default configurations
@@ -120,6 +154,8 @@ show_connection_info() {
 
 # Main execution
 main() {
+    cleanup
+    configure_firewall  # Added firewall configuration step
     check_dependencies
     setup_repository
     configure_environment
@@ -134,7 +170,6 @@ main() {
 }
 
 # Error handling
-set -e
 trap 'echo -e "${RED}An error occurred. Installation failed.${NC}"; exit 1' ERR
 
 main
