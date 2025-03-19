@@ -2,6 +2,7 @@
 
 # LayerEdge CLI Light Node Automatic Installation Script
 
+set -e
 clear
 curl -sL https://raw.githubusercontent.com/zidanaetrna/unichain/refs/heads/main/button_logo_script.sh | bash
 
