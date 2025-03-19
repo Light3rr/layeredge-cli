@@ -103,27 +103,35 @@ setup_repository() {
 # Get user private key and configure environment
 configure_environment() {
     echo -e "\n${GREEN}Please enter your private key for the CLI node:${NC}"
-    # Force read to use the terminal (TTY) and wait for input
-    read -p "Enter key: " private_key < /dev/tty || {
-        echo -e "${RED}Error: Unable to read private key. Are you running this in an interactive shell?${NC}"
+    # Check if running interactively
+    if [ -t 0 ]; then
+        echo "Running in an interactive shell (stdin is a terminal)."
+    else
+        echo -e "${RED}Warning: Not running interactively (stdin is not a terminal). This may cause input issues.${NC}"
+    fi
+    # Check TTY availability
+    tty >/dev/null 2>&1 && echo "TTY is available: $(tty)" || echo -e "${RED}No TTY available.${NC}"
+
+    # Attempt to read with explicit terminal input
+    echo -n "Enter your private key: "
+    read -p "" private_key < /dev/tty || {
+        echo -e "${RED}Error: Failed to read input. Please run this script in an interactive terminal (e.g., directly via SSH or local console).${NC}"
         exit 1
     }
     echo
 
-    # Validate that private_key is not empty
+    # Validate input
     if [ -z "$private_key" ]; then
-        echo -e "${RED}Error: Private key cannot be empty. Please try again.${NC}"
+        echo -e "${RED}Error: Private key cannot be empty.${NC}"
         exit 1
     fi
 
-    # Debugging: Show the captured key (optional, remove in production if sensitive)
-    echo -e "${GREEN}Captured private key: $private_key${NC}"
+    echo -e "${GREEN}Private key captured successfully: $private_key${NC}"
 
-    # Create .env file with default configurations
+    # Create .env file
     cat > .env << EOL
 GRPC_URL=34.31.74.109:9090
-CONTRACT_ADDR=cosmos1ufs3tlq4umljk0qfe8k5ya0x6hpavn897u2cnf9k0en9jr7qarqqt56709
-ZK_PROVER_URL=http://127.0.0.1:3001
+CONTRACT_ADDR=cosmos1ufs3tlq4umljk0qfe8k5ya0x6hpavn897u2cnf9k0en9jr7qarqq  ZK_PROVER_URL=http://127.0.0.1:3001
 API_REQUEST_TIMEOUT=100
 POINTS_API=http://127.0.0.1:8080
 PRIVATE_KEY=$private_key
