@@ -134,11 +134,20 @@ EOL
 start_merkle_service() {
     echo "Building and starting Merkle service..."
     cd risc0-merkle-service || exit
-    cargo build
+    cargo build || { echo -e "${RED}Error: Failed to build risc0-merkle-service.${NC}"; exit 1; }
+    
+    # Start in background
     cargo run &
     MERKLE_PID=$!
-    # Wait a few seconds for service to initialize
-    sleep 5
+    
+    # Wait for the service to be ready
+    echo "Waiting for Merkle service to start on port 3001..."
+    timeout 30s bash -c "until curl -s http://127.0.0.1:3001/process >/dev/null 2>&1; do sleep 1; done" || {
+        echo -e "${RED}Error: Merkle service failed to start within 30 seconds.${NC}"
+        kill $MERKLE_PID 2>/dev/null
+        exit 1
+    }
+    echo "Merkle service is up and running."
     cd ..
 }
 
