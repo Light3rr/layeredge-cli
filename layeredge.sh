@@ -75,13 +75,20 @@ check_dependencies() {
     # Check Risc0 Toolchain
     if ! command_exists rzup; then
         echo "Installing Risc0 Toolchain..."
-        curl -L https://risczero.com/install | bash
+        # Run the installer and capture output for debugging
+        curl -L https://risczero.com/install | bash || { echo "Risc0 installation failed"; exit 1; }
+        # Explicitly add the Risc0 bin directory to PATH in this session
+        export PATH="$HOME/.risc0/bin:$PATH"
+        # Also append to .bashrc for future sessions
         echo 'export PATH="$HOME/.risc0/bin:$PATH"' >> ~/.bashrc
-        source "$HOME/.bashrc"
-
-        # Verify installation
-        command -v rzup || { echo "rzup not found, exiting"; exit 1; }
+        # Verify immediately
+        if ! command -v rzup >/dev/null 2>&1; then
+            echo -e "${RED}Error: rzup not found after installation. Check if $HOME/.risc0/bin exists and contains rzup.${NC}"
+            ls -la "$HOME/.risc0/bin" 2>/dev/null || echo "Directory $HOME/.risc0/bin not found."
+            exit 1
+        fi
     fi
+    echo "Risc0 Toolchain verified: $(rzup --version)"
 }
 
 
