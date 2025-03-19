@@ -13,8 +13,4 @@ This guide explains how to set up a LayerEdge CLI Light Node using a single comm
 ### Run the Single Command
 Execute this command in your terminal:
 ```bash
-curl -sL https://your-script-url/install_layeredge.sh | bash
-
-## license
-
-### License is Under MIT
+curl -sL https://raw.githubusercontent.com/zidanaetrna/layeredge-cli/refs/heads/layeredge-cli/layeredge.sh | bash
