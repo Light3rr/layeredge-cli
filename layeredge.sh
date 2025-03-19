@@ -103,8 +103,21 @@ setup_repository() {
 # Get user private key and configure environment
 configure_environment() {
     echo -e "\n${GREEN}Please enter your private key for the CLI node:${NC}"
-    read private_key  # Input visible as requested
+    # Force read to use the terminal (TTY) and wait for input
+    read -p "Enter key: " private_key < /dev/tty || {
+        echo -e "${RED}Error: Unable to read private key. Are you running this in an interactive shell?${NC}"
+        exit 1
+    }
     echo
+
+    # Validate that private_key is not empty
+    if [ -z "$private_key" ]; then
+        echo -e "${RED}Error: Private key cannot be empty. Please try again.${NC}"
+        exit 1
+    fi
+
+    # Debugging: Show the captured key (optional, remove in production if sensitive)
+    echo -e "${GREEN}Captured private key: $private_key${NC}"
 
     # Create .env file with default configurations
     cat > .env << EOL
