@@ -103,11 +103,13 @@ setup_repository() {
 # Get user private key and configure environment
 configure_environment() {
     echo -e "\n${GREEN}Please enter your private key for the CLI node:${NC}"
-    # Simple prompt, no fancy redirection
-    read -p "Enter your private key: " private_key
-    echo  # Newline for clarity
+    # Force read to use the terminal, not piped stdin
+    read -p "Enter your private key: " private_key < /dev/tty || {
+        echo -e "${RED}Error: Failed to read input. Please run in an interactive terminal.${NC}"
+        exit 1
+    }
+    echo
 
-    # Check if input was captured
     if [ -z "$private_key" ]; then
         echo -e "${RED}Error: No private key entered. Please try again.${NC}"
         exit 1
@@ -115,7 +117,6 @@ configure_environment() {
 
     echo -e "${GREEN}Private key captured: $private_key${NC}"
 
-    # Create .env file
     cat > .env << EOL
 GRPC_URL=34.31.74.109:9090
 CONTRACT_ADDR=cosmos1ufs3tlq4umljk0qfe8k5ya0x6hpavn897u2cnf9k0en9jr7qarqqt56709
@@ -125,7 +126,6 @@ POINTS_API=http://127.0.0.1:8080
 PRIVATE_KEY=$private_key
 EOL
 
-    # Source the environment variables
     source .env
 }
 
